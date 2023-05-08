@@ -1,49 +1,32 @@
 import 'package:first_project/src/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import 'details_list/details_navigator.dart';
+import 'details_list/details_data.dart';
 
 class DetailsList extends StatelessWidget {
-  DetailsList({Key? key}) : super(key: key);
-
-  // Sample dynamic data
-  final List<Map<String, dynamic>> detailsData = [
-    {
-      "title": "Mon, 16/05",
-      "progressBar": 40,
-      "trackTime": "2:30 hrs",
-    },
-    {
-      "title": "Tus, 10/05",
-      "progressBar": 100,
-      "trackTime": "4:30 hrs",
-    },
-    {
-      "title": "Wed, 11/05",
-      "progressBar": 50,
-      "trackTime": "3:00 hrs",
-    },
-    {
-      "title": "Thu, 12/05",
-      "progressBar": 20,
-      "trackTime": "1:30 hrs",
-    },
-    {
-      "title": "Fri, 13/05",
-      "progressBar": 90,
-      "trackTime": "6:00 hrs",
-    },
-    {
-      "title": "Sat, 14/05",
-      "progressBar": 10,
-      "trackTime": "0:45 hrs",
-    },
-    {
-      "title": "Sun, 15/05",
-    },
-  ];
+  const DetailsList({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final detailsData = Provider.of<DetailsData>(context).data;
+
+    String getFormattedDuration(List<Map<String, dynamic>> detailsData, index) {
+      var list = detailsData[index]['list'];
+      if (list == null || list.isEmpty) {
+        return '0:00 hrs';
+      }
+      DateTime startTime = list.first['time'];
+      DateTime endTime = list.last['time'];
+
+      Duration duration = endTime.difference(startTime);
+      String formattedDuration =
+          '${duration.inHours.toString().padLeft(2, '0')}:${(duration.inMinutes % 60).toString().padLeft(2, '0')} hrs';
+
+      return formattedDuration;
+    }
+
     return Container(
       padding: const EdgeInsets.fromLTRB(
         25.0,
@@ -96,7 +79,9 @@ class DetailsList extends StatelessWidget {
                                   pageBuilder: (context, animation,
                                           secondaryAnimation) =>
                                       DetailsNavigator(
-                                          data: detailsData[index]),
+                                    data: detailsData[index],
+                                    listData: detailsData[index]['list'] ?? [],
+                                  ),
                                   transitionsBuilder: (context, animation,
                                       secondaryAnimation, child) {
                                     const begin = Offset(
@@ -145,7 +130,10 @@ class DetailsList extends StatelessWidget {
                                 SizedBox(
                                   width: 90,
                                   child: Text(
-                                    detailsData[index]['title']!,
+                                    DateFormat('E, M/d').format(
+                                        (detailsData[index]['date_title']
+                                                as DateTime?) ??
+                                            DateTime.now()),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 16,
@@ -207,7 +195,7 @@ class DetailsList extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 7.0),
                                 Text(
-                                  detailsData[index]['trackTime'] ?? '0:00 hrs',
+                                  getFormattedDuration(detailsData, index),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     fontSize: 16,

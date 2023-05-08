@@ -5,8 +5,10 @@ import 'package:intl/intl.dart';
 
 class DetailsNavigator extends StatelessWidget {
   final Map<String, dynamic> data;
+  final List<Map<String, dynamic>> listData;
 
-  const DetailsNavigator({Key? key, required this.data}) : super(key: key);
+  const DetailsNavigator({Key? key, required this.data, required this.listData})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -48,10 +50,11 @@ class DetailsNavigator extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(width: 10),
-                                const Text(
-                                  // '${data['title']}',
-                                  'Monday, May 2',
-                                  style: TextStyle(
+                                Text(
+                                  DateFormat('EEEE, MMMM d').format(
+                                      (data['date_title'] as DateTime?) ??
+                                          DateTime.now()),
+                                  style: const TextStyle(
                                     fontSize: 18.0,
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.eggPlant,
@@ -62,51 +65,7 @@ class DetailsNavigator extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.fromLTRB(20, 40, 20, 20),
                           child: CustomHeaderList(
-                            header: data['trackTime'],
-                            list: [
-                              {
-                                'id': 1,
-                                'image':
-                                    'https://firebasestorage.googleapis.com/v0/b/next-js-dummy-fcee4.appspot.com/o/ss%201.png?alt=media&token=cae0c084-44df-4552-a406-eb04a5053057',
-                                'progress': 20,
-                                'time': DateTime(2023, 5, 2, 7, 20),
-                              },
-                              {
-                                'id': 2,
-                                'image':
-                                    'https://firebasestorage.googleapis.com/v0/b/next-js-dummy-fcee4.appspot.com/o/ss%201.png?alt=media&token=cae0c084-44df-4552-a406-eb04a5053057',
-                                'progress': 60,
-                                'time': DateTime(2023, 5, 2, 8, 20),
-                              },
-                              {
-                                'id': 3,
-                                'image':
-                                    'https://firebasestorage.googleapis.com/v0/b/next-js-dummy-fcee4.appspot.com/o/ss%201.png?alt=media&token=cae0c084-44df-4552-a406-eb04a5053057',
-                                'progress': 80,
-                                'time': DateTime(2023, 5, 2, 9, 20),
-                              },
-                              {
-                                'id': 4,
-                                'image':
-                                    'https://firebasestorage.googleapis.com/v0/b/next-js-dummy-fcee4.appspot.com/o/ss%201.png?alt=media&token=cae0c084-44df-4552-a406-eb04a5053057',
-                                'progress': 60,
-                                'time': DateTime(2023, 5, 2, 10, 30),
-                              },
-                              {
-                                'id': 5,
-                                'image':
-                                    'https://firebasestorage.googleapis.com/v0/b/next-js-dummy-fcee4.appspot.com/o/ss%201.png?alt=media&token=cae0c084-44df-4552-a406-eb04a5053057',
-                                'progress': 30,
-                                'time': DateTime(2023, 5, 2, 11, 50),
-                              },
-                              {
-                                'id': 6,
-                                'image':
-                                    'https://firebasestorage.googleapis.com/v0/b/next-js-dummy-fcee4.appspot.com/o/ss%201.png?alt=media&token=cae0c084-44df-4552-a406-eb04a5053057',
-                                'progress': 90,
-                                'time': DateTime(2023, 5, 2, 12, 50),
-                              },
-                            ],
+                            list: listData,
                           ),
                         ),
                       ],
@@ -123,22 +82,25 @@ class DetailsNavigator extends StatelessWidget {
 }
 
 class CustomHeaderList extends StatelessWidget {
-  final String header;
   final List<Map<String, dynamic>> list;
 
-  const CustomHeaderList({Key? key, required this.header, required this.list})
-      : super(key: key);
+  const CustomHeaderList({Key? key, required this.list}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    DateTime startTime = list.first['time'];
-    DateTime endTime = list.last['time'];
-    String formattedStartTime = DateFormat('hh:mm a').format(startTime);
-    String formattedEndTime = DateFormat('hh:mm a').format(endTime);
+    String formattedStartTime = '00:00';
+    String formattedEndTime = '00:00';
+    String formattedDuration = '00:00';
+    if (list.isNotEmpty) {
+      DateTime startTime = list.first['time'];
+      DateTime endTime = list.last['time'];
+      formattedStartTime = DateFormat('hh:mm a').format(startTime);
+      formattedEndTime = DateFormat('hh:mm a').format(endTime);
 
-    Duration duration = endTime.difference(startTime);
-    String formattedDuration =
-        '${duration.inHours.toString().padLeft(2, '0')}:${(duration.inMinutes % 60).toString().padLeft(2, '0')}';
+      Duration duration = endTime.difference(startTime);
+      formattedDuration =
+          '${duration.inHours.toString().padLeft(2, '0')}:${(duration.inMinutes % 60).toString().padLeft(2, '0')} hrs';
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -155,7 +117,7 @@ class CustomHeaderList extends StatelessWidget {
               children: [
                 const SizedBox(width: 8),
                 Text(
-                  'Total: $header',
+                  'Total: $formattedDuration',
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w600,
@@ -189,7 +151,7 @@ class CustomHeaderList extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Tracked ($header)',
+                  'Tracked ($formattedDuration)',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -254,6 +216,8 @@ class CustomHeaderList extends StatelessWidget {
                       ),
                       LinearProgressIndicator(
                         value: item['progress'] / 100,
+                        color: AppColors.greenTwik,
+                        backgroundColor: Colors.grey[300],
                       ),
                       const SizedBox(
                         height: 5,
