@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+// import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
+// import 'details_list/details_data.dart';
 
 import '../app_colors.dart';
-import '../utils.dart';
 
 class CalenderDisplayPage extends StatefulWidget {
-  const CalenderDisplayPage({Key? key}) : super(key: key);
+  final ValueChanged<List<DateTime>> onWeekSelected;
+  const CalenderDisplayPage({Key? key, required this.onWeekSelected})
+      : super(key: key);
 
   @override
   State<CalenderDisplayPage> createState() => _CalenderDisplayPageState();
@@ -14,22 +17,7 @@ class CalenderDisplayPage extends StatefulWidget {
 class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
   var startOfWeek = DateTime.now();
   var endOfWeek = DateTime.now();
-  ValueNotifier<DateTime> _focusedDay = ValueNotifier(DateTime.now());
-
-  // dummy data
-  Map<DateTime, Map<String, dynamic>> sampleEvents = {
-    DateTime(2023, 5, 2): {
-      "startTrackTime": DateTime(2023, 5, 2, 7, 20),
-      "endTrackTime": DateTime(2023, 5, 2, 11, 50),
-      "screenShotDetails": {
-        "time": "7:40 AM",
-        "image": "",
-        "memo": "-",
-        "activity": "Idle",
-        "activityLevel": ""
-      }
-    },
-  };
+  final ValueNotifier<DateTime> _focusedDay = ValueNotifier(DateTime.now());
 
   @override
   void initState() {
@@ -37,6 +25,13 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
     DateTime now = DateTime.now();
     startOfWeek = now.subtract(Duration(days: now.weekday - 1));
     endOfWeek = startOfWeek.add(const Duration(days: 5));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _onDaySelected(
+        startOfWeek,
+        now.subtract(Duration(days: now.weekday)),
+      );
+      // _isInitialRun = false;
+    });
   }
 
   @override
@@ -50,20 +45,36 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
         day.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
             day.isBefore(endOfWeek.add(const Duration(days: 1)));
 
+    List<DateTime> dummyDates = [
+      DateTime(2023, 5, 7),
+      DateTime(2023, 5, 8),
+      DateTime(2023, 5, 9),
+      DateTime(2023, 5, 10),
+      DateTime(2023, 5, 11),
+      DateTime(2023, 5, 12),
+      DateTime(2023, 5, 13),
+      DateTime(2023, 5, 15),
+      DateTime(2023, 5, 16),
+    ];
+
     BoxDecoration boxDecoration = BoxDecoration(
       borderRadius: BorderRadius.zero,
       color: isSelectedWeek ? AppColors.eggPlant : null,
     );
 
     if (isSelectedWeek) {
-      if (day == startOfWeek) {
+      if (day.day == startOfWeek.day &&
+          day.month == startOfWeek.month &&
+          day.year == startOfWeek.year) {
         boxDecoration = boxDecoration.copyWith(
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(7.0),
             bottomLeft: Radius.circular(7.0),
           ),
         );
-      } else if (day == endOfWeek) {
+      } else if (day.day == endOfWeek.day &&
+          day.month == endOfWeek.month &&
+          day.year == endOfWeek.year) {
         boxDecoration = boxDecoration.copyWith(
           borderRadius: const BorderRadius.only(
             topRight: Radius.circular(7.0),
@@ -77,16 +88,19 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
         ? const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
         : const TextStyle(fontWeight: FontWeight.bold);
 
+    bool isDummyDate =
+        dummyDates.contains(DateTime(day.year, day.month, day.day));
+
     return MouseRegion(
       cursor:
           !isSelectedWeek ? SystemMouseCursors.click : SystemMouseCursors.alias,
-      onHover: (event) {
-        if (isSelectedWeek) {
-          print('In selected week');
-        } else {
-          print('NotIn selected week');
-        }
-      },
+      // onHover: (event) {
+      //   if (isSelectedWeek) {
+      //     print('In selected week');
+      //   } else {
+      //     print('NotIn selected week');
+      //   }
+      // },
       child: Container(
         decoration: boxDecoration,
         child: Stack(
@@ -97,24 +111,27 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
                 style: dateTextStyle,
               ),
             ),
-            Positioned(
-              bottom: 0,
-              child: Container(
-                alignment: Alignment.bottomCenter,
-                margin: const EdgeInsets.only(bottom: 6, left: 23),
-                height: 6,
-                width: 6,
-                decoration: const BoxDecoration(
-                  color: AppColors.greenTwik,
-                  shape: BoxShape.circle,
+            if (isDummyDate)
+              Positioned(
+                bottom: 0,
+                child: Container(
+                  alignment: Alignment.bottomCenter,
+                  margin: const EdgeInsets.only(bottom: 6, left: 23),
+                  height: 6,
+                  width: 6,
+                  decoration: const BoxDecoration(
+                    color: AppColors.greenTwik,
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
     );
   }
+
+  // var _isInitialRun = true;
 
   @override
   Widget build(BuildContext context) {
@@ -217,17 +234,11 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
     startOfWeek = selectedDay.subtract(Duration(days: selectedDay.weekday - 1));
     endOfWeek = startOfWeek.add(const Duration(days: 6));
-    _focusedDay.value = focusedDay;
+    // endOfWeek = startOfWeek.add(Duration(days: _isInitialRun ? 5 : 6));
+    _focusedDay.value = selectedDay;
     print('Selected week: $startOfWeek - $endOfWeek');
 
-    // Loop through the week's days and print events if they exist
-    for (int i = 0; i < 7; i++) {
-      DateTime currentDayF = startOfWeek.add(Duration(days: i));
-      var currentDay = removeTime(currentDayF);
-      if (sampleEvents.containsKey(currentDay)) {
-        print('Event on $currentDay: ${sampleEvents[currentDay]}');
-      }
-    }
+    widget.onWeekSelected([startOfWeek, endOfWeek]);
 
     setState(() {});
   }

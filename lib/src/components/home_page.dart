@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'calender_display_page.dart';
 import 'details_list.dart';
 import '../app_colors.dart';
+import 'details_list/details_data.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -26,15 +28,15 @@ class HomePage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(30.0),
                 decoration: const BoxDecoration(
                   color: AppColors.backgroundColorWhite,
                 ),
                 child: const Text(
                   'Work Diary',
                   style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 23,
+                    fontWeight: FontWeight.bold,
                     color: AppColors.eggPlant,
                   ),
                 ),
@@ -52,14 +54,22 @@ class HomePage extends StatelessWidget {
                       constraints: const BoxConstraints(
                         maxWidth: 400,
                       ),
-                      child: const CalenderDisplayPage(),
+                      child: CalenderDisplayPage(
+                        onWeekSelected: (dates) async {
+                          final detailsData = Provider.of<DetailsData>(
+                            context,
+                            listen: false,
+                          );
+                          detailsData.filterByWeek(dates[0], dates[1]);
+                        },
+                      ),
                     ),
                     const VerticalDivider(
                       color: AppColors.borderColorWhite,
                       thickness: 1,
                       width: 1,
                     ),
-                    Expanded(
+                    const Expanded(
                       flex: 2,
                       child: DetailsList(),
                     ),

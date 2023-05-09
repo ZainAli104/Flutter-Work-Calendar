@@ -12,7 +12,28 @@ class DetailsList extends StatelessWidget {
   Widget build(BuildContext context) {
     final detailsData = Provider.of<DetailsData>(context).data;
 
+    String getTotalDuration(List<Map<String, dynamic>> detailsData) {
+      Duration totalDuration = Duration.zero;
+
+      for (var data in detailsData) {
+        var list = data['list'];
+        if (list != null && list.isNotEmpty) {
+          DateTime startTime = list.first['time'];
+          DateTime endTime = list.last['time'];
+
+          Duration duration = endTime.difference(startTime);
+          totalDuration += duration;
+        }
+      }
+
+      String formattedTotalDuration =
+          '${totalDuration.inHours.toString().padLeft(2, '0')}:${(totalDuration.inMinutes % 60).toString().padLeft(2, '0')} hrs';
+
+      return formattedTotalDuration;
+    }
+
     String getFormattedDuration(List<Map<String, dynamic>> detailsData, index) {
+      // print(detailsData[index]['date_title']);
       var list = detailsData[index]['list'];
       if (list == null || list.isEmpty) {
         return '0:00 hrs';
@@ -27,6 +48,21 @@ class DetailsList extends StatelessWidget {
       return formattedDuration;
     }
 
+    String getDateRange(List<Map<String, dynamic>> detailsData) {
+      if (detailsData.isEmpty) {
+        return '';
+      }
+
+      DateTime firstDate = detailsData.first['date_title'];
+      DateTime lastDate = detailsData.last['date_title'];
+
+      DateFormat dateFormat = DateFormat('MMM d');
+      String firstDateString = dateFormat.format(firstDate);
+      String lastDateString = dateFormat.format(lastDate);
+
+      return '$firstDateString - $lastDateString';
+    }
+
     return Container(
       padding: const EdgeInsets.fromLTRB(
         25.0,
@@ -38,11 +74,11 @@ class DetailsList extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header title
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12.0),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0),
             child: Text(
-              'Aug 15 - Aug 21',
-              style: TextStyle(
+              getDateRange(detailsData),
+              style: const TextStyle(
                 fontSize: 20.0,
                 fontWeight: FontWeight.w600,
                 color: AppColors.eggPlant, // Change this to your desired color
@@ -120,7 +156,7 @@ class DetailsList extends StatelessWidget {
                               );
                             },
                             contentPadding: const EdgeInsets.symmetric(
-                              vertical: 7.0,
+                              vertical: 5.0,
                               horizontal: 30.0,
                             ),
                             tileColor: backgroundColor,
@@ -128,7 +164,7 @@ class DetailsList extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 SizedBox(
-                                  width: 90,
+                                  width: 80,
                                   child: Text(
                                     DateFormat('E, M/d').format(
                                         (detailsData[index]['date_title']
@@ -141,7 +177,7 @@ class DetailsList extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 8.0),
+                                const SizedBox(width: 3.0),
                                 Expanded(
                                   child: LayoutBuilder(
                                     builder: (context, constraints) {
@@ -223,11 +259,12 @@ class DetailsList extends StatelessWidget {
 
           // Footer widget
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 50),
+            padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 50),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                footerColumn('Tracked', '22:50 hrs', AppColors.greenTwik),
+                footerColumn('Tracked', getTotalDuration(detailsData),
+                    AppColors.greenTwik),
                 footerColumn('Manual', null, Colors.lightGreen),
                 footerColumn(
                     'Over limit', null, const Color.fromARGB(255, 242, 76, 64)),
