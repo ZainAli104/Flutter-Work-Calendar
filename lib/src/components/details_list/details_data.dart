@@ -234,27 +234,6 @@ class DetailsData extends ChangeNotifier {
           'progress': 80,
           'time': DateTime(2023, 5, 2, 9, 20),
         },
-        {
-          'id': 4,
-          'image':
-              'https://firebasestorage.googleapis.com/v0/b/next-js-dummy-fcee4.appspot.com/o/ss%201.png?alt=media&token=cae0c084-44df-4552-a406-eb04a5053057',
-          'progress': 60,
-          'time': DateTime(2023, 5, 2, 10, 30),
-        },
-        {
-          'id': 5,
-          'image':
-              'https://firebasestorage.googleapis.com/v0/b/next-js-dummy-fcee4.appspot.com/o/ss%201.png?alt=media&token=cae0c084-44df-4552-a406-eb04a5053057',
-          'progress': 30,
-          'time': DateTime(2023, 5, 2, 11, 50),
-        },
-        {
-          'id': 6,
-          'image':
-              'https://firebasestorage.googleapis.com/v0/b/next-js-dummy-fcee4.appspot.com/o/ss%201.png?alt=media&token=cae0c084-44df-4552-a406-eb04a5053057',
-          'progress': 90,
-          'time': DateTime(2023, 5, 2, 12, 50),
-        },
       ],
     },
     {

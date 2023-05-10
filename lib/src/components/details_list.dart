@@ -290,7 +290,7 @@ class DetailsList extends StatelessWidget {
               ),
             ),
             Container(
-              margin: const EdgeInsets.only(left: 4.0),
+              margin: const EdgeInsets.only(left: 10.0),
               width: 16,
               height: 16,
               decoration: BoxDecoration(

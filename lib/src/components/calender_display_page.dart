@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 // import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 // import 'details_list/details_data.dart';
+import 'package:intl/intl.dart';
 
 import '../app_colors.dart';
 
@@ -15,9 +16,26 @@ class CalenderDisplayPage extends StatefulWidget {
 }
 
 class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
-  var startOfWeek = DateTime.now();
-  var endOfWeek = DateTime.now();
-  final ValueNotifier<DateTime> _focusedDay = ValueNotifier(DateTime.now());
+  var startOfWeek = DateTime.now().toUtc();
+  var endOfWeek = DateTime.now().toUtc();
+  final ValueNotifier<DateTime> _focusedDay =
+      ValueNotifier(DateTime.now().toUtc());
+
+  Future<void> _selectMonthAndYear(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _focusedDay.value,
+      firstDate: DateTime.utc(2015, 1),
+      lastDate: DateTime.utc(2035, 12),
+      initialDatePickerMode: DatePickerMode.year,
+    );
+    if (picked != null && picked != _focusedDay.value) {
+      _onDaySelected(picked.toUtc(), _focusedDay.value.toUtc());
+      setState(() {
+        _focusedDay.value = DateTime.utc(picked.year, picked.month);
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -28,9 +46,8 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _onDaySelected(
         startOfWeek,
-        now.subtract(Duration(days: now.weekday)),
+        startOfWeek,
       );
-      // _isInitialRun = false;
     });
   }
 
@@ -43,8 +60,10 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
   Widget dateBuilder(context, day, focusedDay) {
     bool isSelectedWeek =
         day.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
-            day.isBefore(endOfWeek.add(const Duration(days: 1)));
+            (day.isBefore(endOfWeek.add(const Duration(days: 0))) ||
+                isSameDay(day, endOfWeek));
 
+    // ====== Dummy dates ======
     List<DateTime> dummyDates = [
       DateTime(2023, 5, 7),
       DateTime(2023, 5, 8),
@@ -68,8 +87,8 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
           day.year == startOfWeek.year) {
         boxDecoration = boxDecoration.copyWith(
           borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(7.0),
-            bottomLeft: Radius.circular(7.0),
+            topLeft: Radius.circular(9.0),
+            bottomLeft: Radius.circular(9.0),
           ),
         );
       } else if (day.day == endOfWeek.day &&
@@ -77,8 +96,8 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
           day.year == endOfWeek.year) {
         boxDecoration = boxDecoration.copyWith(
           borderRadius: const BorderRadius.only(
-            topRight: Radius.circular(7.0),
-            bottomRight: Radius.circular(7.0),
+            topRight: Radius.circular(9.0),
+            bottomRight: Radius.circular(9.0),
           ),
         );
       }
@@ -131,8 +150,6 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
     );
   }
 
-  // var _isInitialRun = true;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -141,20 +158,21 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
         child: Column(
           children: [
             Card(
-              margin: const EdgeInsets.all(8.0),
-              elevation: 5.0,
+              margin: const EdgeInsets.all(15.0),
+              elevation: .0,
               shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(
                   Radius.circular(10),
                 ),
                 side: BorderSide.none,
-                // side: BorderSide(color: Colors.white, width: 1.0),
               ),
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 400),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: tableCalenderWidget(),
+                child: Column(
+                  children: [
+                    _buildCustomHeader(),
+                    tableCalenderWidget(),
+                  ],
                 ),
               ),
             ),
@@ -171,6 +189,71 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
     );
   }
 
+  Widget _buildCustomHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            icon: const Icon(
+              Icons.chevron_left,
+              color: AppColors.eggPlant,
+              size: 28,
+            ),
+            onPressed: () {
+              setState(() {
+                _focusedDay.value =
+                    _focusedDay.value.subtract(const Duration(days: 30));
+              });
+            },
+          ),
+          InkWell(
+            onTap: () => _selectMonthAndYear(context),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(12, 5, 5, 5),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(214, 48, 150, 51),
+                borderRadius: BorderRadius.circular(5.0),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    DateFormat.yMMMM().format(_focusedDay.value),
+                    style: const TextStyle(
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(
+                      width: 2.0), // To give some space between text and icon
+                  const Icon(
+                    Icons.arrow_drop_down,
+                    color: Colors.white,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(
+              Icons.chevron_right,
+              color: AppColors.eggPlant,
+              size: 28,
+            ),
+            onPressed: () {
+              setState(() {
+                _focusedDay.value =
+                    _focusedDay.value.add(const Duration(days: 30));
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   TableCalendar<dynamic> tableCalenderWidget() {
     return TableCalendar(
       calendarBuilders: CalendarBuilders(
@@ -180,33 +263,7 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
         rangeHighlightBuilder: dateBuilder,
         rangeStartBuilder: dateBuilder,
       ),
-
-      headerStyle: const HeaderStyle(
-        titleCentered: true, // Center the title
-        titleTextStyle: TextStyle(
-          fontSize: 20.0,
-          fontWeight: FontWeight.bold,
-          color: AppColors.eggPlant, // Change this to your desired color
-        ),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(10),
-            topRight: Radius.circular(10),
-          ),
-        ),
-        formatButtonVisible: false,
-        leftChevronIcon: Icon(
-          Icons.chevron_left,
-          color: AppColors.eggPlant,
-          size: 28,
-        ),
-        rightChevronIcon: Icon(
-          Icons.chevron_right,
-          color: AppColors.eggPlant,
-          size: 28,
-        ),
-      ),
+      headerVisible: false,
       calendarStyle: const CalendarStyle(
         isTodayHighlighted: false,
       ),
@@ -232,10 +289,10 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
   }
 
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    startOfWeek = selectedDay.subtract(Duration(days: selectedDay.weekday - 1));
-    endOfWeek = startOfWeek.add(const Duration(days: 6));
-    // endOfWeek = startOfWeek.add(Duration(days: _isInitialRun ? 5 : 6));
-    _focusedDay.value = selectedDay;
+    startOfWeek =
+        selectedDay.subtract(Duration(days: selectedDay.weekday - 1)).toUtc();
+    endOfWeek = startOfWeek.add(const Duration(days: 6)).toUtc();
+    _focusedDay.value = selectedDay.toUtc();
     print('Selected week: $startOfWeek - $endOfWeek');
 
     widget.onWeekSelected([startOfWeek, endOfWeek]);
