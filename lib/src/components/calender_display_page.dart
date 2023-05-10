@@ -150,12 +150,9 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
                 side: BorderSide.none,
                 // side: BorderSide(color: Colors.white, width: 1.0),
               ),
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 400),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: tableCalenderWidget(),
-                ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: tableCalenderWidget(),
               ),
             ),
             const SizedBox(
