@@ -55,6 +55,13 @@ class HomePage extends StatelessWidget {
                         maxWidth: 400,
                       ),
                       child: CalenderDisplayPage(
+                        onRangeSelected: (value) async {
+                          final detailsData = Provider.of<DetailsData>(
+                            context,
+                            listen: false,
+                          );
+                          detailsData.filterByWeek(value[0], value[1]);
+                        },
                         onWeekSelected: (dates) async {
                           final detailsData = Provider.of<DetailsData>(
                             context,

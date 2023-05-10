@@ -8,8 +8,13 @@ import '../app_colors.dart';
 
 class CalenderDisplayPage extends StatefulWidget {
   final ValueChanged<List<DateTime>> onWeekSelected;
-  const CalenderDisplayPage({Key? key, required this.onWeekSelected})
-      : super(key: key);
+  final ValueChanged<List<DateTime>> onRangeSelected;
+
+  const CalenderDisplayPage({
+    Key? key,
+    required this.onWeekSelected,
+    required this.onRangeSelected,
+  }) : super(key: key);
 
   @override
   State<CalenderDisplayPage> createState() => _CalenderDisplayPageState();
@@ -18,8 +23,11 @@ class CalenderDisplayPage extends StatefulWidget {
 class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
   var startOfWeek = DateTime.now().toUtc();
   var endOfWeek = DateTime.now().toUtc();
+  DateTime? rangeStart;
+  DateTime? rangeEnd;
   final ValueNotifier<DateTime> _focusedDay =
       ValueNotifier(DateTime.now().toUtc());
+  bool isWeekMode = true; // Add this to keep track of the current mode
 
   Future<void> _selectMonthAndYear(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -57,7 +65,7 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
     super.dispose();
   }
 
-  Widget dateBuilder(context, day, focusedDay) {
+  Widget weekDateBuilder(context, day, focusedDay) {
     bool isSelectedWeek =
         day.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
             (day.isBefore(endOfWeek.add(const Duration(days: 0))) ||
@@ -150,6 +158,105 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
     );
   }
 
+  Widget rangeDateBuilder(context, day, focusedDay) {
+    bool isSelectedStartDay = isSameDay(rangeStart, day);
+    bool isSelectedEndDay = isSameDay(rangeEnd, day);
+    bool isWithinRange = (rangeStart != null && rangeEnd != null) &&
+        (day.isAfter(rangeStart!) && day.isBefore(rangeEnd!) ||
+            isSameDay(rangeStart!, day) ||
+            isSameDay(rangeEnd!, day));
+    BoxDecoration boxDecoration;
+
+    if (isSelectedStartDay || isSelectedEndDay) {
+      boxDecoration = const BoxDecoration(
+        borderRadius: BorderRadius.zero,
+        color: AppColors.eggPlant,
+      );
+
+      if (isSelectedStartDay) {
+        boxDecoration = boxDecoration.copyWith(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(9.0),
+            bottomLeft: Radius.circular(9.0),
+          ),
+        );
+      } else if (isSelectedEndDay) {
+        boxDecoration = boxDecoration.copyWith(
+          borderRadius: const BorderRadius.only(
+            topRight: Radius.circular(9.0),
+            bottomRight: Radius.circular(9.0),
+          ),
+        );
+      }
+    } else if (isWithinRange) {
+      boxDecoration = BoxDecoration(
+        borderRadius: BorderRadius.zero,
+        color: AppColors.eggPlant.withOpacity(0.7),
+      );
+    } else {
+      boxDecoration = const BoxDecoration();
+    }
+
+    TextStyle dateTextStyle;
+    if (isSelectedStartDay || isSelectedEndDay) {
+      dateTextStyle =
+          const TextStyle(fontWeight: FontWeight.bold, color: Colors.white);
+    } else if (isWithinRange) {
+      dateTextStyle =
+          const TextStyle(fontWeight: FontWeight.bold, color: Colors.white70);
+    } else {
+      dateTextStyle =
+          const TextStyle(fontWeight: FontWeight.bold, color: Colors.black);
+    }
+
+    // ====== Dummy dates ======
+    List<DateTime> dummyDates = [
+      DateTime(2023, 5, 7),
+      DateTime(2023, 5, 8),
+      DateTime(2023, 5, 9),
+      DateTime(2023, 5, 10),
+      DateTime(2023, 5, 11),
+      DateTime(2023, 5, 12),
+      DateTime(2023, 5, 13),
+      DateTime(2023, 5, 15),
+      DateTime(2023, 5, 16),
+    ];
+
+    bool isDummyDate =
+        dummyDates.contains(DateTime(day.year, day.month, day.day));
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: Container(
+        decoration: boxDecoration,
+        child: Stack(
+          children: [
+            Center(
+              child: Text(
+                day.day.toString(),
+                style: dateTextStyle,
+              ),
+            ),
+            if (isDummyDate)
+              Positioned(
+                bottom: 0,
+                child: Container(
+                  alignment: Alignment.bottomCenter,
+                  margin: const EdgeInsets.only(bottom: 6, left: 23),
+                  height: 6,
+                  width: 6,
+                  decoration: const BoxDecoration(
+                    color: AppColors.greenTwik,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -176,13 +283,30 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
                 ),
               ),
             ),
+            SwitchListTile(
+              title: const Text("Switch to range mode"),
+              value: !isWeekMode,
+              onChanged: (bool value) {
+                setState(() {
+                  isWeekMode = !value;
+                  if (value) {
+                    rangeStart = null;
+                    rangeEnd = null;
+                  }
+                });
+              },
+              secondary: const Icon(
+                Icons.calendar_today,
+                color: AppColors.greenTwik,
+              ),
+            ),
             const SizedBox(
-              height: 20,
+              height: 13,
             ),
-            Text(
-              '${startOfWeek.toString().split(' ')[0]} - ${endOfWeek.toString().split(' ')[0]}',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
+            // Text(
+            //   '${startOfWeek.toString().split(' ')[0]} - ${endOfWeek.toString().split(' ')[0]}',
+            //   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            // ),
           ],
         ),
       ),
@@ -257,11 +381,11 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
   TableCalendar<dynamic> tableCalenderWidget() {
     return TableCalendar(
       calendarBuilders: CalendarBuilders(
-        defaultBuilder: dateBuilder,
-        withinRangeBuilder: dateBuilder,
-        rangeEndBuilder: dateBuilder,
-        rangeHighlightBuilder: dateBuilder,
-        rangeStartBuilder: dateBuilder,
+        defaultBuilder: isWeekMode ? weekDateBuilder : rangeDateBuilder,
+        withinRangeBuilder: isWeekMode ? weekDateBuilder : rangeDateBuilder,
+        rangeEndBuilder: isWeekMode ? weekDateBuilder : rangeDateBuilder,
+        rangeHighlightBuilder: isWeekMode ? weekDateBuilder : rangeDateBuilder,
+        rangeStartBuilder: isWeekMode ? weekDateBuilder : rangeDateBuilder,
       ),
       headerVisible: false,
       calendarStyle: const CalendarStyle(
@@ -289,14 +413,32 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
   }
 
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    startOfWeek =
-        selectedDay.subtract(Duration(days: selectedDay.weekday - 1)).toUtc();
-    endOfWeek = startOfWeek.add(const Duration(days: 6)).toUtc();
-    _focusedDay.value = selectedDay.toUtc();
-    print('Selected week: $startOfWeek - $endOfWeek');
+    if (isWeekMode) {
+      startOfWeek =
+          selectedDay.subtract(Duration(days: selectedDay.weekday - 1)).toUtc();
+      endOfWeek = startOfWeek.add(const Duration(days: 6)).toUtc();
+      _focusedDay.value = selectedDay.toUtc();
+      // print('Selected week: $startOfWeek - $endOfWeek');
+      widget.onWeekSelected([startOfWeek, endOfWeek]);
+    } else {
+      if (rangeStart == null) {
+        rangeStart = selectedDay;
+      } else if (rangeEnd == null) {
+        if (selectedDay.isAfter(rangeStart!)) {
+          rangeEnd = selectedDay;
+        } else {
+          rangeEnd = rangeStart;
+          rangeStart = selectedDay;
+        }
+      } else {
+        rangeStart = selectedDay;
+        rangeEnd = null;
+      }
 
-    widget.onWeekSelected([startOfWeek, endOfWeek]);
-
+      if (rangeStart != null && rangeEnd != null) {
+        widget.onRangeSelected([rangeStart!, rangeEnd!]);
+      }
+    }
     setState(() {});
   }
 }
