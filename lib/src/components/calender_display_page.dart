@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
+import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
-// import 'details_list/details_data.dart';
+import 'details_list/details_data.dart';
 import 'package:intl/intl.dart';
 
 import '../app_colors.dart';
@@ -28,6 +28,7 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
   final ValueNotifier<DateTime> _focusedDay =
       ValueNotifier(DateTime.now().toUtc());
   bool isWeekMode = true; // Add this to keep track of the current mode
+  List<DateTime> checkProgressDates = [];
 
   Future<void> _selectMonthAndYear(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -57,6 +58,8 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
         startOfWeek,
       );
     });
+    DetailsData detailsData = Provider.of<DetailsData>(context, listen: false);
+    checkProgressDates = detailsData.getDateTitles();
   }
 
   @override
@@ -70,19 +73,6 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
         day.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
             (day.isBefore(endOfWeek.add(const Duration(days: 0))) ||
                 isSameDay(day, endOfWeek));
-
-    // ====== Dummy dates ======
-    List<DateTime> dummyDates = [
-      DateTime(2023, 5, 7),
-      DateTime(2023, 5, 8),
-      DateTime(2023, 5, 9),
-      DateTime(2023, 5, 10),
-      DateTime(2023, 5, 11),
-      DateTime(2023, 5, 12),
-      DateTime(2023, 5, 13),
-      DateTime(2023, 5, 15),
-      DateTime(2023, 5, 16),
-    ];
 
     BoxDecoration boxDecoration = BoxDecoration(
       borderRadius: BorderRadius.zero,
@@ -115,8 +105,8 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
         ? const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)
         : const TextStyle(fontWeight: FontWeight.bold);
 
-    bool isDummyDate =
-        dummyDates.contains(DateTime(day.year, day.month, day.day));
+    bool isProgress =
+        checkProgressDates.contains(DateTime(day.year, day.month, day.day));
 
     return MouseRegion(
       cursor:
@@ -138,7 +128,7 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
                 style: dateTextStyle,
               ),
             ),
-            if (isDummyDate)
+            if (isProgress)
               Positioned(
                 bottom: 0,
                 child: Container(
@@ -209,21 +199,8 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
           const TextStyle(fontWeight: FontWeight.bold, color: Colors.black);
     }
 
-    // ====== Dummy dates ======
-    List<DateTime> dummyDates = [
-      DateTime(2023, 5, 7),
-      DateTime(2023, 5, 8),
-      DateTime(2023, 5, 9),
-      DateTime(2023, 5, 10),
-      DateTime(2023, 5, 11),
-      DateTime(2023, 5, 12),
-      DateTime(2023, 5, 13),
-      DateTime(2023, 5, 15),
-      DateTime(2023, 5, 16),
-    ];
-
-    bool isDummyDate =
-        dummyDates.contains(DateTime(day.year, day.month, day.day));
+    bool isProgress =
+        checkProgressDates.contains(DateTime(day.year, day.month, day.day));
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -237,7 +214,7 @@ class _CalenderDisplayPageState extends State<CalenderDisplayPage> {
                 style: dateTextStyle,
               ),
             ),
-            if (isDummyDate)
+            if (isProgress)
               Positioned(
                 bottom: 0,
                 child: Container(

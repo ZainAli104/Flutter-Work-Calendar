@@ -367,6 +367,24 @@ class DetailsData extends ChangeNotifier {
         }
       ],
     },
+    {
+      "date_title": DateTime(2023, 6, 03),
+      "progressBar": 70,
+      'list': [
+        {
+          'image':
+              'https://firebasestorage.googleapis.com/v0/b/next-js-dummy-fcee4.appspot.com/o/ss%201.png?alt=media&token=cae0c084-44df-4552-a406-eb04a5053057',
+          'progress': 70,
+          'time': DateTime(2023, 6, 03, 12, 50),
+        },
+        {
+          'image':
+              'https://firebasestorage.googleapis.com/v0/b/next-js-dummy-fcee4.appspot.com/o/ss%201.png?alt=media&token=cae0c084-44df-4552-a406-eb04a5053057',
+          'progress': 70,
+          'time': DateTime(2023, 6, 03, 13, 50),
+        }
+      ],
+    },
   ];
 
   List<Map<String, dynamic>>? originalData;
@@ -407,5 +425,16 @@ class DetailsData extends ChangeNotifier {
   set data(List<Map<String, dynamic>> value) {
     _data = value;
     notifyListeners();
+  }
+
+  List<DateTime> getDateTitles() {
+    List<DateTime> dateTitles = [];
+
+    for (Map<String, dynamic> dataItem in _data) {
+      DateTime dateTitle = dataItem['date_title'];
+      dateTitles.add(dateTitle);
+    }
+
+    return dateTitles;
   }
 }

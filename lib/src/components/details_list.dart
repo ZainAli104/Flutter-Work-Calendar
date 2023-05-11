@@ -1,9 +1,10 @@
-import 'package:first_project/src/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+
 import 'details_list/details_navigator.dart';
 import 'details_list/details_data.dart';
+import 'package:first_project/src/app_colors.dart';
 
 class DetailsList extends StatelessWidget {
   const DetailsList({Key? key}) : super(key: key);
@@ -21,8 +22,13 @@ class DetailsList extends StatelessWidget {
           DateTime startTime = list.first['time'];
           DateTime endTime = list.last['time'];
 
-          Duration duration = endTime.difference(startTime);
-          totalDuration += duration;
+          if (list.length == 1) {
+            totalDuration +=
+                Duration(minutes: startTime.minute, hours: startTime.hour);
+          } else {
+            Duration duration = endTime.difference(startTime);
+            totalDuration += duration;
+          }
         }
       }
 
@@ -33,19 +39,24 @@ class DetailsList extends StatelessWidget {
     }
 
     String getFormattedDuration(List<Map<String, dynamic>> detailsData, index) {
-      // print(detailsData[index]['date_title']);
       var list = detailsData[index]['list'];
       if (list == null || list.isEmpty) {
         return '0:00 hrs';
       }
+
       DateTime startTime = list.first['time'];
-      DateTime endTime = list.last['time'];
 
-      Duration duration = endTime.difference(startTime);
-      String formattedDuration =
-          '${duration.inHours.toString().padLeft(2, '0')}:${(duration.inMinutes % 60).toString().padLeft(2, '0')} hrs';
+      // If list length is 1, return only the start time in 'HH:mm' format followed by ' hrs'
+      if (list.length == 1) {
+        return '${DateFormat('HH:mm').format(startTime)} hrs';
+      } else {
+        DateTime endTime = list.last['time'];
+        Duration duration = endTime.difference(startTime);
+        String formattedDuration =
+            '${duration.inHours.toString().padLeft(2, '0')}:${(duration.inMinutes % 60).toString().padLeft(2, '0')} hrs';
 
-      return formattedDuration;
+        return formattedDuration;
+      }
     }
 
     String getDateRange(List<Map<String, dynamic>> detailsData) {
